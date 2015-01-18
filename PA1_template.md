@@ -41,7 +41,8 @@ interval values.
 3.	The user has sufficient memory to process the script.
 4.	The user has the following packages with libraries installed:
 
-```{r prelibraries, warning=FALSE, message=FALSE,  echo=TRUE}  
+
+```r
 library(base)  
 library(utils)  
 library(graphics)  
@@ -49,7 +50,7 @@ library(grDevices)
 library(stringr)  
 library(plyr)  
 library(lattice)  
-```    
+```
 
 ## Documentation Conventions:
 
@@ -75,14 +76,15 @@ the date and time stamp from the original archive as verification of authenticit
 to load the data into R as a data frame. 
 
 
-```{r q1loaddata, echo=TRUE}  
+
+```r
 myfile <- "repdata_data_activity.zip"  
 mypath <- "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip"  
 download.file(mypath, myfile, quiet = FALSE, mode = "wb")  
 unzip(myfile, overwrite = TRUE, exdir = ".", unzip = "internal", setTimes = TRUE)  
 myfileactivity <- "activity.csv"  
 mydata <- read.csv(myfileactivity, colClasses = c("integer", "POSIXct", "integer"))  
-```  
+```
 
 
 #### Conclusion:
@@ -90,8 +92,16 @@ mydata <- read.csv(myfileactivity, colClasses = c("integer", "POSIXct", "integer
 The only transformation necessary occurred upon importing the data using specific data types. The 
 data was already normalized.
 
-```{r q1conclusion, echo=TRUE}
+
+```r
 str(mydata)
+```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : int  NA NA NA NA NA NA NA NA NA NA ...
+##  $ date    : POSIXct, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
 ```
 
 
@@ -105,11 +115,18 @@ To calculate the total number of steps per day, I used the *aggregate* function 
 function to the **steps** field based upon the **date** field. Since *aggregate()* removed NA values, 
 this met the first criteria of ignoring missing values.
 
-```{r q2loaddata, echo=TRUE}  
+
+```r
 ## calculate sum of steps by date
 mystepssum <- aggregate(steps ~ date, data = mydata, sum)  
 str(mystepssum)  
-```  
+```
+
+```
+## 'data.frame':	53 obs. of  2 variables:
+##  $ date : POSIXct, format: "2012-10-02" "2012-10-03" ...
+##  $ steps: int  126 11352 12116 13294 15420 11015 12811 9900 10304 17382 ...
+```
 
 ### 2.A.	Histogram
 
@@ -124,7 +141,8 @@ Calculate and report the mean and median total number of steps taken per day.
 I calculated the mean and median plus the highest frequency and included all these figures in 
 the histogram.
 
-```{r stepssumcalc, echo=TRUE}  
+
+```r
 ## calculate mean and median
 mymean <- as.integer(mean(mystepssum$steps))  
 mymedian <- as.integer(median(mystepssum$steps))  
@@ -133,24 +151,38 @@ mysubtitle <- paste("Median=",mymedian,",","Mean=",mymean, sep="")
 
 ## report mean and median
 mymean; mymedian  
-```  
+```
+
+```
+## [1] 10766
+```
+
+```
+## [1] 10765
+```
 
 Calculating the highest frequency to include on the plot required creating the histogram object but 
 not creating the plot. I then reordered the results and retreived the first, or largest, count.
 
-```{r stepshighcount, echo=TRUE}  
+
+```r
 myplotstepssum <- hist(mystepssum$steps, plot = FALSE)  
 myorder <- order(myplotstepssum$counts, decreasing=TRUE)  
 myhighcount <- myplotstepssum$counts[myorder[1]]  
 
 ## report highest frequency
 myhighcount  
-```  
+```
+
+```
+## [1] 28
+```
 
 The histogram indicated the mean and median values and marked the highest frequency count. This was 
 important for later problems in the assignment.
 
-```{r q2histogram, echo=TRUE}  
+
+```r
 hist(mystepssum$steps, main = "Histogram of Total Steps Per Day\n October and November 2012", ylim = c(0,40), xlab = "Steps Per Day", plot = TRUE)  
 
 rug(mystepssum$steps)  
@@ -158,7 +190,9 @@ abline(v = mycalc, col = "forestgreen", lwd = 2)
 abline(h = myhighcount, col = "darkgoldenrod", lwd = 2)  
 legend("topright", bty="n", lty = 1, lwd = 2, col = c("forestgreen", "darkgoldenrod", "black"), legend = c("Mean/Median", "High frequency", "Daily tickmark"))  
 title(sub=mysubtitle)  
-```  
+```
+
+![plot of chunk q2histogram](figure/q2histogram-1.png) 
 
 #### Conclusion:
 
@@ -167,9 +201,22 @@ number of
 steps taken per day varied. The mean `mymean` and median `mymedian` for the total number of steps taken 
 per day were almost identical. The highest frequency count `myhighcount` was below 30.
 
-```{r q2conclusion, echo=TRUE}
+
+```r
 ## report mean, median and highest frequency count
 mymean; mymedian; myhighcount  
+```
+
+```
+## [1] 10766
+```
+
+```
+## [1] 10765
+```
+
+```
+## [1] 28
 ```
 
 ## 3.	What is the average daily activity pattern?
@@ -178,10 +225,17 @@ mymean; mymedian; myhighcount
 
 To answer this question, I first calculated the mean number of steps for each interval. 
 
-```{r q3aggregateinterval, echo=TRUE}  
+
+```r
 mystepsim <- aggregate(steps ~ interval, data = mydata, mean)  
 str(mystepsim)  
-```  
+```
+
+```
+## 'data.frame':	288 obs. of  2 variables:
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+##  $ steps   : num  1.717 0.3396 0.1321 0.1509 0.0755 ...
+```
 
 ## 3.A.	Time series plot
 
@@ -198,7 +252,8 @@ number of steps?
 Further calculations on the means of the intervals revealed the interval with the highest count. For 
 reporting purposes, I formatted the intervals as times using the format hh:mm.
 
-```{r q3maxinterval, echo=TRUE}  
+
+```r
 mystepsmax <- mystepsim[with(mystepsim, order(steps, interval, na.last = TRUE, decreasing=TRUE)), ]  
 mymaxinterval <- mystepsmax[1,1]  
 mymaxstep <- as.integer(mystepsmax[1,2])  
@@ -207,21 +262,30 @@ mymaxstep <- as.integer(mystepsmax[1,2])
 mymaxinterval; mymaxstep  
 ```
 
+```
+## [1] 835
+```
+
+```
+## [1] 206
+```
+
 For publication purposes, I formatted the maximum interval `mymaxinterval` using hh:mm.
 
-```{r q3maxintervalformat, echo=TRUE}
+
+```r
 mymaxinterval <- as.character(mymaxinterval)  
 mymaxinterval <- paste("000",mymaxinterval,sep="")  
 mymaxinterval <- str_sub(mymaxinterval, start= -4)  
 mymaxinterval <- paste(substr(mymaxinterval, 0,2),":",substr(mymaxinterval,3,4),sep="")  
-```  
+```
 
 I included the maximum interval and steps values in the time series plot as a legend `mytextq3`. 
 I created graph labels `myxaxislabelsq3` and custom tickmarks `myxaxisticksq3` for the x axis 
 in the format of hh:mm for better readability.
 
-```{r q3plottitles, echo=TRUE}  
 
+```r
 ## create graph labels
 mymainq3 <- "Average Number of Steps in 24-Hour Period\n Measured in Five Minute Increments"  
 myxaxisq3 <- "Interval Time on 24-Hour Clock"  
@@ -235,7 +299,9 @@ myxaxisticksq3 <- c(0, 300, 600, 900, 1200, 1500, 1800, 2100, 2355)
 with(mystepsim, plot(interval,steps,type="l",main=mymainq3, sub=mysubq3, xaxt="n", xlab=myxaxisq3, ylab=myyaxisq3))  
 legend("topright", bty="n", legend = mytextq3)  
 axis(1, at=myxaxisticksq3, labels=myxaxislabelsq3, cex.axis=0.8)  
-```  
+```
+
+![plot of chunk q3plottitles](figure/q3plottitles-1.png) 
 
 #### Conclusion:
 
@@ -244,9 +310,18 @@ steps `mymaxstep` occured at an interval `mymaxinterval` in the early morning. T
 peaks in activity around noon, 4:00 p.m. and before and after 6:00 p.m. Finally, the graph showed 
 a clear pattern of inactivity during the hours of midnight to 5:00 a.m.
 
-```{r Q3conclusion, echo=TRUE}
+
+```r
 ## report interval at which the highest step count occurred
 mymaxinterval; mymaxstep  
+```
+
+```
+## [1] "08:35"
+```
+
+```
+## [1] 206
 ```
 
 
@@ -259,7 +334,8 @@ mymaxinterval; mymaxstep
 The first goal was to calculate and report the total number of missing values in the dataset (i.e. the 
 total number of rows with NAs).
 
-```{r q4calcmissingvalues, echo=TRUE}  
+
+```r
 ## total number of rows in original data set
 mytotalrows <- nrow(mydata[, ])  
 
@@ -271,11 +347,23 @@ mynapercent <- round(100 * (mynarows / mytotalrows))
 
 ## report total number of rows, number of rows with NA values and the percent
 mytotalrows; mynarows; mynapercent  
-```  
+```
+
+```
+## [1] 17568
+```
+
+```
+## [1] 2304
+```
+
+```
+## [1] 13
+```
 
 #### Conclusion:
 
-Of all the rows in the original data set `mytotalrows`, more than `r mynapercent` percent of the rows 
+Of all the rows in the original data set `mytotalrows`, more than 13 percent of the rows 
 contained NA values `mynarows` , `{r mynarows}` rows, in the **steps** field.  
 
 ### 4.B.	Devise a strategy
@@ -290,13 +378,13 @@ To determine a strategy, I looked at what dates had NA values, the range of valu
 **interval** field and how the dates in the original data set with no NA values compared to 
 the dates in the original data set with NA values.
 
-```{r q4imputestrategy, echo=TRUE}  
+
+```r
 myintervals <- length(unique(mydata[, 3]))  
 mynaintervals <- length(unique(mydata[is.na(mydata$steps), 3]))  
 mynarowsdates <- unique(mydata[is.na(mydata$steps), 2])  
 mynarowsdateslength <- length(mynarowsdates)  
-
-```    
+```
 
 #### Conclusion:	
 
@@ -304,25 +392,49 @@ mynarowsdateslength <- length(mynarowsdates)
 The original data and the data made up of NA values both contained the same number of intervals, 
 `myintervals` and `mynaintervals`.
 
-```{r q4bconclusionintervals, echo=TRUE}
+
+```r
 myintervals; mynaintervals
+```
+
+```
+## [1] 288
+```
+
+```
+## [1] 288
 ```
 
 The original data set showed a few dates `mynarowsdateslength` whose **steps** fields had NA values, 
 `mynarowsdates`.  
 
-```{r q4conclusiondates, echo=TRUE}
+
+```r
 mynarowsdateslength; mynarowsdates
+```
+
+```
+## [1] 8
+```
+
+```
+## [1] "2012-10-01 PDT" "2012-10-08 PDT" "2012-11-01 PDT" "2012-11-04 PDT"
+## [5] "2012-11-09 PST" "2012-11-10 PST" "2012-11-14 PST" "2012-11-30 PST"
 ```
 
 When comparing the dates of the NA rows with the dates of the non-NA rows, the data sets were mutually 
 exclusive. In the following code snipet, `mydatesintersect` demonstrated that none of the dates 
 in the **is.na** function subset appeared in the **!is.na()** subset.
 
-```{r q4intersect, echo=TRUE}  
+
+```r
 mydatesintersect <- intersect(mydata[!is.na(mydata$steps), 2], mydata[is.na(mydata$steps), 2])  
 mydatesintersect
-```    
+```
+
+```
+## numeric(0)
+```
 
 This mutual exclusivity implied there were several days when the person 
 did not put on the measuring device. That eliminated the option of finding the mean of **steps** for 
@@ -332,10 +444,15 @@ mean of the mean for all days and update all NA values to that value.
 
 The mean value of the mean for all days was stored in `mystepsimmean`.
 
-```{r q4stpesimmean, echo=TRUE}  
+
+```r
 mystepsimmean <- round(mean(mystepsim$steps))  
 mystepsimmean
-```    
+```
+
+```
+## [1] 37
+```
 
 
 ### 4.C.	Create new dataset
@@ -347,13 +464,21 @@ Create a new dataset that is equal to the original dataset but with the missing 
 To accomplish this task, I replaced every **steps** field containing the NA value with the mean 
 value `mystepsimmean`.
 
-```{r q4datasetnonas, echo=TRUE}  
+
+```r
 mydatana <- mydata   
 mydatana[is.na(mydatana$steps), 1] <- mystepsimmean  
 ##
 ## data set with NA replaced values
 str(mydatana)  
-```    
+```
+
+```
+## 'data.frame':	17568 obs. of  3 variables:
+##  $ steps   : num  37 37 37 37 37 37 37 37 37 37 ...
+##  $ date    : POSIXct, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+```
 
 
 ### 4.D.	Histogram
@@ -365,7 +490,8 @@ Make a histogram of the total number of steps taken each day.
 In the histogram, I decided to calculate and report the mean and median total number of steps taken 
 per day, as with the original histogram in problem number 2.  
 
-```{r q4meanmedian, echo=TRUE}  
+
+```r
 mystepssumna <- aggregate(steps ~ date, data = mydatana, sum)   
 mymeandatana <- as.integer(mean(mystepssumna$steps))  
 mymediandatana <- as.integer(median(mystepssumna$steps))  
@@ -378,15 +504,29 @@ myhighcountna <- myplotstepssumna$counts[myorderna[1]]
 The variables `mymeandatana`, `mymediandatana`, and `myhighcountna` contained the calculated values 
 form mean, median and high frequency count.
 
-```{r q4rptmeanmedian, echo=TRUE}
+
+```r
 ## report mean, median and high frequency count  
 mymeandatana; mymediandatana; myhighcountna  
-```    
+```
+
+```
+## [1] 10751
+```
+
+```
+## [1] 10656
+```
+
+```
+## [1] 36
+```
 
 Before including the values in the histogram, I changed the point size for the main heading. As with 
 the first histogram, the y axis had a range of 0-40.
 
-```{r q4histnona, echo=TRUE}  
+
+```r
 par(cex.main = .8)  
 hist(mystepssumna$steps, main = "Histogram of Total Steps Per Day\n Without NA Values\n October and November 2012", ylim = c(0,40), xlab = "Steps Per Day", plot = TRUE)  
 rug(mystepssumna$steps)  
@@ -396,7 +536,9 @@ abline(h = myhighcountna, col = "darkgoldenrod", lwd = 2)
 legend("right", bty = "n", xjust = 1, yjust = 1, lty = 1,  lwd = 2, col = c("plum", "cadetblue", "darkgoldenrod", "black"), legend = c("Mean", "Median", "High frequency", "Daily tickmark"))  
 mysubtitledatana <- paste("Median=",mymediandatana," ,","Mean=",mymeandatana, sep="")  
 title(sub=mysubtitledatana)  
-```    
+```
+
+![plot of chunk q4histnona](figure/q4histnona-1.png) 
 
 
 ### 4.D.1	Differing Values
@@ -416,12 +558,37 @@ The **steps** field showed much continuity and two changes. The **Min.**, **1st 
 **Median** values remained zero (0), while **Max** remained 806.00. With NA values removed, 
 the **Mean** and **3rd Qu.** fields changed, bringing the latter field more in line with the **Mean**.
 
-```{r q4d1summarydatasets, echo=TRUE}  
+
+```r
 ## summary of original data  
 summary(mydata)  
+```
+
+```
+##      steps             date                        interval     
+##  Min.   :  0.00   Min.   :2012-10-01 00:00:00   Min.   :   0.0  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16 00:00:00   1st Qu.: 588.8  
+##  Median :  0.00   Median :2012-10-31 00:00:00   Median :1177.5  
+##  Mean   : 37.38   Mean   :2012-10-31 00:25:34   Mean   :1177.5  
+##  3rd Qu.: 12.00   3rd Qu.:2012-11-15 00:00:00   3rd Qu.:1766.2  
+##  Max.   :806.00   Max.   :2012-11-30 00:00:00   Max.   :2355.0  
+##  NA's   :2304
+```
+
+```r
 ## summary of data with NA replaced values
 summary(mydatana)  
-```    
+```
+
+```
+##      steps             date                        interval     
+##  Min.   :  0.00   Min.   :2012-10-01 00:00:00   Min.   :   0.0  
+##  1st Qu.:  0.00   1st Qu.:2012-10-16 00:00:00   1st Qu.: 588.8  
+##  Median :  0.00   Median :2012-10-31 00:00:00   Median :1177.5  
+##  Mean   : 37.33   Mean   :2012-10-31 00:25:34   Mean   :1177.5  
+##  3rd Qu.: 37.00   3rd Qu.:2012-11-15 00:00:00   3rd Qu.:1766.2  
+##  Max.   :806.00   Max.   :2012-11-30 00:00:00   Max.   :2355.0
+```
 
 Applying the **summary** function to the **aggregate()** **sum()** data 
 sets showed several marked differences between the original and non-NA data sets.
@@ -430,19 +597,42 @@ The summary statistics for the **steps** field showed more clustering of the dat
 the non-NA data set `mystepssumna`. **1st Qu.** increased, while **3rd Qu.** decreased. There was 
 a slight decrease in **Median** and **Mean**.  
 
-```{r q4d1conclsummary, echo=TRUE}
+
+```r
 ## summary for original aggregate sum  
 summary(mystepssum$steps)  
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    8841   10760   10770   13290   21190
+```
+
+```r
 ## summary for NA replaced value aggregate sum
 summary(mystepssumna$steps)  
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9819   10660   10750   12810   21190
 ```
 
 The highest frequency for the original data set `myhighcount` was lower than the highest frequency for 
 the data set with the NA replaced values `myhighcountna`. 
 
-```{r q4d1conclcount, echo=TRUE}
+
+```r
 ## report original high frequency and NA replaced value high frequency
 myhighcount; myhighcountna
+```
+
+```
+## [1] 28
+```
+
+```
+## [1] 36
 ```
 
 The mean and median for the sums of the original data set, `mymean` and `mymedian`, were 
@@ -450,11 +640,31 @@ almost identical. The mean and median for the data set with the replaced NA valu
 and `mymediandatana`, were less than their counterparts in the original data set and were not 
 identical.
 
-```{r q4d1conclmeanmedian, echo=TRUE}
+
+```r
 ## original data set mean and median  
 mymean; mymedian  
+```
+
+```
+## [1] 10766
+```
+
+```
+## [1] 10765
+```
+
+```r
 ## NA replaced value data set mean and median  
 mymeandatana; mymediandatana
+```
+
+```
+## [1] 10751
+```
+
+```
+## [1] 10656
 ```
 
 ### 4.D.2	Impact of Imputing Values
@@ -471,13 +681,26 @@ decreasing the second, in effect moving both values closer to
 the mean. Imputing the mean of the means of all intervals for the NA values decreased the mean and 
 median, the latter more than the former.  The minimum and maximum values remained the same for both.
 
-```{r summarystepsboth, echo=TRUE}  
+
+```r
 ## aggregate sum of steps for original data set  
 summary(mystepssum$steps)  
+```
+
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    8841   10760   10770   13290   21190
+```
+
+```r
 ## aggregate sum of steps for NA replaced value data set  
 summary(mystepssumna$steps)  
+```
 
-```    
+```
+##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##      41    9819   10660   10750   12810   21190
+```
 
  
 ## 5.	Are there differences in activity patterns between weekdays and weekends?
@@ -491,17 +714,27 @@ whether a given date is a weekday or weekend day.
 
 I identified Monday-Friday as weekdays and Saturday-Sunday as weekends.
 
-```{r q5factorvariable, echo=TRUE}  
+
+```r
 mydatana$weekdays <- weekdays(mydatana$date)  
 mydatana$weekdays <- revalue(mydatana$weekdays, c("Monday" = "weekday", "Tuesday" = "weekday", "Wednesday" = "weekday", "Thursday" = "weekday", "Friday" = "weekday", "Saturday" = "weekend", "Sunday" = "weekend"))  
 mydatana$weekdays <- as.factor(mydatana$weekdays)  
-```  
+```
 
 The resulting data frame kept the original fields and added the **weekdays** field as a factor.
 
-```{r q4strweekdays, echo=TRUE}
+
+```r
 ## data set NA replaced value with weekdays field
 str(mydatana)  
+```
+
+```
+## 'data.frame':	17568 obs. of  4 variables:
+##  $ steps   : num  37 37 37 37 37 37 37 37 37 37 ...
+##  $ date    : POSIXct, format: "2012-10-01" "2012-10-01" ...
+##  $ interval: int  0 5 10 15 20 25 30 35 40 45 ...
+##  $ weekdays: Factor w/ 2 levels "weekday","weekend": 1 1 1 1 1 1 1 1 1 1 ...
 ```
 
 ### 5.B.	Pane Plot
@@ -514,10 +747,13 @@ and the average number of steps taken, averaged across all weekday days or weeke
 To accomplish this task, I grouped by the fields **weekdays** and **interval**. Both graphs were drawn 
 on the y-axis with an upper boundary of 250 to make the scale more readable and identical.
 
-```{r q5weekdayplot, echo=TRUE}  
+
+```r
 mystepsww <- aggregate(steps ~ weekdays + interval, data = mydatana, mean)  
 xyplot(steps ~ interval | weekdays, data = mystepsww, ylim=c(0,250), xlab="Interval", ylab="Number of Steps", type="l", layout = c(1, 2))  
-```    
+```
+
+![plot of chunk q5weekdayplot](figure/q5weekdayplot-1.png) 
 
 #### Conclusion:	
 
